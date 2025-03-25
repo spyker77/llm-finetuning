@@ -1,6 +1,6 @@
 # LLM Fine-tuning Project
 
-A production-ready pipeline for fine-tuning language models using LoRA (Low-Rank Adaptation) with MLflow tracking and Prefect orchestration.
+This is an experimental attempt to create a production-ready pipeline for fine-tuning language models using LoRA (Low-Rank Adaptation) with MLflow tracking and Prefect orchestration.
 
 ## Project Overview
 
@@ -22,7 +22,7 @@ This project implements a complete workflow for fine-tuning the Qwen2.5-1.5B-Ins
 ```bash
 .
 ├── data
-│   └── dataset.jsonl        # Training dataset
+│   └── dataset.jsonl        # Training dataset with synthetic data
 ├── src
 │   ├── finetuning           # Fine-tuning scripts
 │   ├── inference            # Inference API
@@ -72,8 +72,6 @@ python src/workflows/fine_tune_flow.py
 
 ### 4. Deploy to Kubernetes (Optional)
 
-<!-- docker run -d -p 5000:5000 --restart always --name registry registry:2 -->
-
 ```bash
 # Apply MLflow Helm chart
 helm install mlflow community-charts/mlflow --namespace llm-finetuning --create-namespace
@@ -86,7 +84,6 @@ helm install prefect-worker prefect/prefect-worker --namespace llm-finetuning -f
 
 # Apply job to deploy workflow
 kubectl apply -f prefect-deploy-job.yaml
-# kubectl delete job prefect-deploy-job -n llm-finetuning
 ```
 
 ## Common Commands
@@ -95,7 +92,6 @@ kubectl apply -f prefect-deploy-job.yaml
 
 ```bash
 # Apply all deployments from prefect.yaml
-# prefect deploy -n llm-finetuning
 prefect deploy -n complete-pipeline-deployment
 
 # Run a specific deployment
@@ -122,6 +118,7 @@ docker build -f Dockerfile.finetuning -t llm-finetuning:latest .
 docker build -f Dockerfile.inference -t llm-inference:latest .
 
 ### For local registry
+docker run -d -p 5000:5000 --restart always --name registry registry:2
 
 # Build and push fine-tuning image
 docker build -f Dockerfile.finetuning -t localhost:5000/llm-finetuning:latest .
@@ -130,26 +127,6 @@ docker push localhost:5000/llm-finetuning:latest
 # Build and push inference image
 docker build -f Dockerfile.inference -t localhost:5000/llm-inference:latest .
 docker push localhost:5000/llm-inference:latest
-```
-
-## Troubleshooting
-
-### Prefect Caching Issues
-
-If you encounter caching errors with Prefect, use the `cache_policy=NO_CACHE` parameter:
-
-```python
-@task(cache_policy=NO_CACHE)
-def my_task():
-    # Task code
-```
-
-### MLflow Connection Issues
-
-Ensure MLflow server is running and accessible at the specified URI:
-
-```python
-mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "http://localhost:5000"))
 ```
 
 ## Future Improvements
