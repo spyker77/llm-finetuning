@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: prefect-deploy-job
+  namespace: llm-finetuning
+spec:
+  template:
+    spec:
+      containers:
+        - name: prefect-deploy
+          image: localhost:5000/llm-finetuning:latest
+          env:
+            - name: PREFECT_API_URL
+              value: "http://prefect-server.llm-finetuning.svc.cluster.local:4200/api"
+          command: ["prefect", "deploy", "-n", "complete-pipeline-deployment"]
+      restartPolicy: Never

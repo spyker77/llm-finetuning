@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: update-pull-steps
+  namespace: llm-finetuning
+spec:
+  template:
+    spec:
+      containers:
+        - name: prefect-update
+          image: localhost:5000/llm-finetuning:latest
+          env:
+            - name: PREFECT_API_URL
+              value: "http://prefect-server.llm-finetuning.svc.cluster.local:4200/api"
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "pull: []" > empty-pull-steps.yaml
+              prefect deployment set-pull-steps 'LLM Pipeline/complete-pipeline-deployment' --file empty-pull-steps.yaml
+              # Verify the update worked
+              prefect deployment inspect 'LLM Pipeline/complete-pipeline-deployment'
+      restartPolicy: Never

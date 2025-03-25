@@ -1,0 +1,131 @@
+# name: llm-finetuning
+
+# deployments:
+#   - name: fine-tune-deployment
+#     entrypoint: src/workflows/fine_tune_flow.py:fine_tune_flow
+#     work_pool:
+#       name: process-pool
+#       work_queue: default
+#     schedule: null
+#     parameters:
+#       model_id: Qwen/Qwen2.5-1.5B-Instruct
+#       data_path: data/dataset.jsonl
+#       output_path: ./models/lora
+#       experiment_name: qwen2.5-finetuning
+#       run_name: qwen2.5-lora
+#       lora_r: 8
+#       lora_alpha: 32
+#       learning_rate: 1e-5
+#       max_steps: 100
+
+#   - name: inference-deployment
+#     entrypoint: src/workflows/inference_flow.py:inference_flow
+#     work_pool:
+#       name: process-pool
+#       work_queue: default
+#     schedule: null
+#     parameters:
+#       model_id: Qwen/Qwen2.5-1.5B-Instruct
+#       adapter_path: ./models/lora
+#       port: 8000
+
+#   - name: complete-pipeline-deployment
+#     entrypoint: src/workflows/main_workflow.py:llm_pipeline
+#     work_pool:
+#       name: process-pool
+#       work_queue: default
+#     schedule: null
+#     parameters:
+#       model_id: Qwen/Qwen2.5-1.5B-Instruct
+#       data_path: data/dataset.jsonl
+#       output_path: ./models/lora
+#       run_inference: true
+#       port: 8000
+
+name: llm-finetuning
+
+pull: []
+
+deployments:
+  - name: fine-tune-deployment
+    entrypoint: src/workflows/fine_tune_flow.py:fine_tune_flow
+    work_pool:
+      name: k8s-pool
+      work_queue: default
+    schedule: null
+    parameters:
+      model_id: Qwen/Qwen2.5-1.5B-Instruct
+      data_path: /app/data/dataset.jsonl
+      output_path: /app/models/lora
+      experiment_name: qwen2.5-finetuning
+      run_name: qwen2.5-lora
+      lora_r: 8
+      lora_alpha: 32
+      learning_rate: 1e-5
+      max_steps: 100
+    job_variables:
+      image: localhost:5000/llm-finetuning:latest
+      namespace: llm-finetuning
+      env:
+        MLFLOW_TRACKING_URI: "http://mlflow:5000"
+      resource_requests:
+        memory: "8Gi"
+        cpu: "2"
+      resource_limits:
+        memory: "16Gi"
+        cpu: "4"
+      volumes:
+        - name: model-storage
+          persistentVolumeClaim:
+            claimName: model-storage-pvc
+      volume_mounts:
+        - name: model-storage
+          mountPath: /app/models
+
+  - name: inference-deployment
+    entrypoint: src/workflows/inference_flow.py:inference_flow
+    work_pool:
+      name: k8s-pool
+      work_queue: default
+    schedule: null
+    parameters:
+      model_id: Qwen/Qwen2.5-1.5B-Instruct
+      adapter_path: /app/models/lora
+      port: 8000
+    job_variables:
+      image: localhost:5000/llm-inference:latest
+      namespace: llm-finetuning
+      env:
+        MLFLOW_TRACKING_URI: "http://mlflow:5000"
+      volumes:
+        - name: model-storage
+          persistentVolumeClaim:
+            claimName: model-storage-pvc
+      volume_mounts:
+        - name: model-storage
+          mountPath: /app/models
+
+  - name: complete-pipeline-deployment
+    entrypoint: src/workflows/main_workflow.py:llm_pipeline
+    work_pool:
+      name: k8s-pool
+      work_queue: default
+    schedule: null
+    parameters:
+      model_id: Qwen/Qwen2.5-1.5B-Instruct
+      data_path: /app/data/dataset.jsonl
+      output_path: /app/models/lora
+      run_inference: true
+      port: 8000
+    job_variables:
+      image: localhost:5000/llm-finetuning:latest
+      namespace: llm-finetuning
+      env:
+        MLFLOW_TRACKING_URI: "http://mlflow:5000"
+      volumes:
+        - name: model-storage
+          persistentVolumeClaim:
+            claimName: model-storage-pvc
+      volume_mounts:
+        - name: model-storage
+          mountPath: /app/models
