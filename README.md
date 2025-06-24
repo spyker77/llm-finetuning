@@ -34,21 +34,23 @@ This project implements a complete workflow for fine-tuning the Qwen2.5-1.5B-Ins
 
 ### Prerequisites
 
-- Python 3.12+
+- Python 3.12
+- uv
 - Docker
 - Kubernetes cluster (optional)
 - MLflow server
 
-### 1. Start MLflow Server
+### 1. Install Dependencies
 
 ```bash
-mlflow server --host 0.0.0.0 --port 5000
+uv sync
 ```
 
-### 2. Install Dependencies
+### 2. Run MLflow
 
 ```bash
-pip install -r requirements.txt
+# Inside activated environment, start MLflow server
+mlflow server --host 0.0.0.0 --port 5000
 ```
 
 ### 3. Run Fine-tuning with Prefect
@@ -66,7 +68,7 @@ prefect worker start -p process-pool
 # or
 prefect worker start --pool k8s-pool --type kubernetes
 
-# Run the fine-tuning flow
+# Run the fine-tuning flow in yet another terminal
 python src/workflows/fine_tune_flow.py
 ```
 

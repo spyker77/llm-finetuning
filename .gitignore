@@ -10,6 +10,12 @@
 /.venv/
 output
 
+# LLM-finetuning artifacts
+/results/
+/models/
+/mlruns/
+/mlartifacts/
+
 # Credentials & data
 **/.DS_Store
 *.db
