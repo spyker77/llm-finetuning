@@ -34,7 +34,7 @@ This project implements a complete workflow for fine-tuning the Qwen2.5-1.5B-Ins
 
 ### Prerequisites
 
-- Python 3.12
+- Python 3.12+
 - uv
 - Docker
 - Kubernetes cluster (optional)
